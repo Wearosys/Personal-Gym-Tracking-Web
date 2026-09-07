@@ -1,0 +1,994 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Push / Pull / Legs Plan</title>
+<meta name="theme-color" content="#14161a">
+<link rel="manifest" href="./manifest.json">
+<link rel="apple-touch-icon" href="./icon-192.png">
+<link rel="icon" href="./icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600&display=swap">
+<style>
+  :root{
+    --bg:#14161a;
+    --surface:#1c1f24;
+    --surface-2:#22262c;
+    --border:#2b2f36;
+    --text:#eceef0;
+    --text-dim:#9199a3;
+    --accent:#e3b23c;
+    --accent-2:#5b84a6;
+    --rest-grey:#6b7280;
+    --danger:#c0554a;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;height:100%;background:var(--bg);}
+  #ppl-root{
+    font-family:'Inter',system-ui,sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    padding:14px 12px 32px;
+    min-height:100vh;
+    max-width:520px;
+    margin:0 auto;
+  }
+  .head{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:10px;
+    margin-bottom:14px;
+  }
+  .head h1{
+    font-family:'Oswald',sans-serif;
+    font-weight:700;
+    font-size:22px;
+    letter-spacing:.2px;
+    margin:0 0 4px;
+    line-height:1.15;
+  }
+  .head p{
+    margin:0;
+    font-size:12.5px;
+    color:var(--text-dim);
+    line-height:1.4;
+  }
+  .head-btns{
+    flex:none;
+    display:flex;
+    flex-direction:column;
+    gap:5px;
+  }
+  .reset-btn{
+    background:transparent;
+    border:1px solid var(--border);
+    color:var(--text-dim);
+    font-family:'Inter',sans-serif;
+    font-size:11px;
+    padding:6px 10px;
+    border-radius:7px;
+    cursor:pointer;
+    white-space:nowrap;
+  }
+  .reset-btn:active{background:var(--surface-2);}
+
+  /* ---- chart section (replaces old rest-rule note) ---- */
+  .chart-section{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:11px 12px 12px;
+    margin-top:16px;
+  }
+  .chart-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+    margin-bottom:8px;
+  }
+  .chart-head h3{
+    font-family:'Oswald',sans-serif;
+    font-weight:600;
+    font-size:14.5px;
+    margin:0;
+  }
+  .chart-select{
+    background:var(--surface-2);
+    color:var(--text);
+    border:1px solid var(--border);
+    border-radius:6px;
+    font-size:11.5px;
+    padding:5px 6px;
+    max-width:160px;
+  }
+  .chart-svg-wrap{width:100%;}
+  .chart-svg-inner{width:100%;height:auto;display:block;}
+  .chart-empty{
+    font-size:12px;
+    color:var(--text-dim);
+    text-align:center;
+    padding:14px 0;
+  }
+  .entry-list{
+    margin-top:8px;
+    max-height:150px;
+    overflow-y:auto;
+    display:flex;
+    flex-direction:column;
+    gap:4px;
+  }
+  .entry-row{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    font-size:12px;
+    padding:4px 2px;
+    border-bottom:1px solid var(--border);
+  }
+  .entry-row:last-child{border-bottom:none;}
+  .entry-date{color:var(--text-dim);width:44px;flex:none;}
+  .entry-kg{flex:1;cursor:pointer;font-weight:500;}
+  .entry-kg-input{
+    width:70px;
+    background:var(--surface-2);
+    border:1px solid var(--accent);
+    border-radius:5px;
+    color:var(--text);
+    font-size:12px;
+    padding:2px 5px;
+    -moz-appearance:textfield;
+  }
+  .entry-kg-input::-webkit-outer-spin-button,
+  .entry-kg-input::-webkit-inner-spin-button{
+    -webkit-appearance:none;
+    margin:0;
+  }
+  .entry-del{
+    flex:none;
+    background:transparent;
+    border:none;
+    color:var(--danger);
+    font-size:15px;
+    line-height:1;
+    cursor:pointer;
+    padding:2px 4px;
+  }
+
+  .day-strip{
+    display:flex;
+    gap:7px;
+    overflow-x:auto;
+    padding-bottom:6px;
+    margin-bottom:10px;
+    scrollbar-width:none;
+  }
+  .day-strip::-webkit-scrollbar{display:none;}
+
+  .glossary-toggle{
+    display:block;
+    width:100%;
+    background:var(--surface);
+    border:1px solid var(--border);
+    color:var(--text-dim);
+    font-family:'Inter',sans-serif;
+    font-size:12px;
+    font-weight:500;
+    padding:9px 10px;
+    border-radius:8px;
+    cursor:pointer;
+    margin-bottom:16px;
+    text-align:left;
+  }
+  .glossary-toggle:active{border-color:var(--accent);}
+  .glossary-toggle .arrow{float:right;color:var(--text-dim);}
+
+  .glossary-panel{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:4px 12px 8px;
+    margin:-8px 0 16px;
+    display:flex;
+    flex-direction:column;
+  }
+  .glossary-item{
+    padding:9px 0;
+    border-bottom:1px solid var(--border);
+  }
+  .glossary-item:last-child{border-bottom:none;}
+  .glossary-term{
+    font-family:'Oswald',sans-serif;
+    font-weight:600;
+    font-size:13.5px;
+    color:var(--accent);
+  }
+  .glossary-def{
+    font-size:12.5px;
+    color:var(--text);
+    line-height:1.5;
+    margin-top:3px;
+  }
+  .glossary-example{
+    font-size:11.5px;
+    color:var(--text-dim);
+    line-height:1.5;
+    margin-top:4px;
+    font-style:italic;
+  }
+  .day-pill{
+    flex:none;
+    min-width:64px;
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:9px;
+    padding:8px 6px 7px;
+    text-align:center;
+    cursor:pointer;
+  }
+  .day-pill.active{
+    border-color:var(--accent);
+    background:var(--surface-2);
+  }
+  .day-pill .dnum{
+    font-family:'Oswald',sans-serif;
+    font-size:11px;
+    color:var(--text-dim);
+    letter-spacing:.3px;
+  }
+  .day-pill.active .dnum{color:var(--accent);}
+  .day-pill .dtag{
+    font-size:11.5px;
+    font-weight:600;
+    margin-top:2px;
+  }
+  .day-pill .dprog{
+    font-size:10px;
+    color:var(--text-dim);
+    margin-top:3px;
+  }
+  .day-pill.rest-pill .dtag{color:var(--rest-grey);}
+
+  .day-panel-head{
+    margin-bottom:12px;
+  }
+  .day-panel-head h2{
+    font-family:'Oswald',sans-serif;
+    font-weight:600;
+    font-size:19px;
+    margin:0 0 3px;
+  }
+  .day-panel-head .summary{
+    font-size:12.5px;
+    color:var(--text-dim);
+  }
+
+  .rest-day-card{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:22px 16px;
+    text-align:center;
+    color:var(--text-dim);
+    font-size:13.5px;
+    line-height:1.6;
+  }
+  .rest-day-card strong{display:block;color:var(--text);font-family:'Oswald',sans-serif;font-size:16px;margin-bottom:6px;font-weight:600;}
+
+  .exlist{display:flex;flex-direction:column;gap:9px;}
+  .excard{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-left:3px solid var(--border);
+    border-radius:9px;
+    padding:11px 12px;
+    display:flex;
+    gap:10px;
+  }
+  .excard.compound{border-left-color:var(--accent);}
+  .excard.done{opacity:.55;}
+
+  .excard .chk-wrap{flex:none;padding-top:2px;}
+  .chk{
+    appearance:none;
+    -webkit-appearance:none;
+    width:20px;
+    height:20px;
+    border-radius:5px;
+    border:1.5px solid var(--border);
+    background:var(--surface-2);
+    cursor:pointer;
+    position:relative;
+  }
+  .chk:checked{
+    background:var(--accent);
+    border-color:var(--accent);
+  }
+  .chk:checked::after{
+    content:"";
+    position:absolute;
+    left:6px;top:2px;
+    width:5px;height:10px;
+    border:solid #14161a;
+    border-width:0 2px 2px 0;
+    transform:rotate(40deg);
+  }
+
+  .excard .body{flex:1;min-width:0;}
+  .excard .exname-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+  .excard .exname{
+    font-family:'Oswald',sans-serif;
+    font-weight:600;
+    font-size:14.5px;
+    line-height:1.25;
+  }
+  .excard.done .exname{text-decoration:line-through;text-decoration-color:var(--text-dim);}
+  .excard .exnum{color:var(--text-dim);font-weight:500;margin-right:5px;}
+
+  .setinfo{
+    font-size:11.5px;
+    color:var(--accent-2);
+    font-weight:600;
+    white-space:nowrap;
+  }
+  .excard.compound .setinfo{color:var(--accent);}
+
+  .restbadge{
+    font-size:10.5px;
+    color:var(--text-dim);
+    margin-top:2px;
+  }
+  .desc{
+    font-size:12.5px;
+    color:var(--text-dim);
+    line-height:1.5;
+    margin-top:6px;
+  }
+
+  .weight-log{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    margin-top:8px;
+    flex-wrap:wrap;
+  }
+
+  .backup-overlay{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,0.6);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    z-index:1000;
+    padding:16px;
+  }
+  .backup-modal{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:12px;
+    padding:16px;
+    width:100%;
+    max-width:420px;
+    max-height:85vh;
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+  }
+  .backup-modal h3{
+    font-family:'Oswald',sans-serif;
+    font-weight:600;
+    font-size:16px;
+    margin:0;
+  }
+  .backup-modal p{
+    font-size:12.5px;
+    color:var(--text-dim);
+    margin:0;
+    line-height:1.4;
+  }
+  .backup-textarea{
+    width:100%;
+    min-height:110px;
+    background:var(--surface-2);
+    border:1px solid var(--border);
+    border-radius:8px;
+    color:var(--text);
+    font-family:monospace;
+    font-size:11px;
+    padding:8px;
+    resize:vertical;
+  }
+  .backup-btns{
+    display:flex;
+    gap:8px;
+  }
+  .backup-btn{
+    flex:1;
+    background:var(--accent);
+    color:#14161a;
+    border:none;
+    font-family:'Inter',sans-serif;
+    font-weight:600;
+    font-size:12.5px;
+    padding:9px 10px;
+    border-radius:8px;
+    cursor:pointer;
+  }
+  .backup-btn.ghost{
+    background:transparent;
+    color:var(--text-dim);
+    border:1px solid var(--border);
+    font-weight:500;
+  }
+  .backup-status{
+    font-size:11.5px;
+    color:var(--accent);
+    min-height:14px;
+  }
+  .wl-input{
+    width:64px;
+    background:var(--surface-2);
+    border:1px solid var(--border);
+    border-radius:6px;
+    color:var(--text);
+    font-size:12px;
+    padding:5px 6px;
+    -moz-appearance:textfield;
+  }
+  .wl-input::-webkit-outer-spin-button,
+  .wl-input::-webkit-inner-spin-button{
+    -webkit-appearance:none;
+    margin:0;
+  }
+  .wl-save{
+    background:var(--surface-2);
+    border:1px solid var(--border);
+    color:var(--text);
+    font-size:11px;
+    padding:5px 9px;
+    border-radius:6px;
+    cursor:pointer;
+  }
+  .wl-save:active{border-color:var(--accent);}
+  .wl-last{
+    font-size:11px;
+    color:var(--text-dim);
+  }
+</style>
+</head>
+<body>
+<div id="ppl-root"></div>
+<script>
+(function(){
+
+  const DAYS = [
+    {
+      id:'d1', num:1, tag:'Push', rest:false,
+      summary:'6 cviků · 2 Chest · 2 Shoulders · 2 Triceps',
+      exercises:[
+        {n:'Barbell Bench Press', sets:'4×5 @ 1–2 RIR', restT:'3 min', compound:true,
+         desc:'Lopatky stažené k sobě a dolů, chodidla pevně na zemi. Úchop mírně širší než ramena, zápěstí rovná. Spouštěj k dolní části hrudníku, lokty cca 45° od těla. 2 rozehřívací série, pak pracovní váha na 5 opakování s 1–2 opakováními v rezervě (RIR) – skonči o 1–2 opakování dřív, než bys už nedal ani jedno navíc.'},
+        {n:'Standing Overhead Press', sets:'3–4×6–8', restT:'3 min', compound:true,
+         desc:'Stoj na šířku boků, podsazená pánev, břicho i hýždě zpevněné. Tlač od klíčních kostí kolmo nad temeno hlavy. Pokud se prohýbáš v zádech, sniž váhu.'},
+        {n:'Incline Dumbbell Press', sets:'3–4×8–10', restT:'2 min', compound:false,
+         desc:'Lavice cca 30°, jednoručky nad horní částí hrudníku, lokty pod zápěstím. Tlač nahoru a mírně dovnitř, nahoře nezamykej lokty naplno, dole cítit protažení bez propadu ramen dopředu.'},
+        {n:'Dumbbell Lateral Raise', sets:'3×12–15', restT:'2 min', compound:false,
+         desc:'Mírný předklon trupu, jednoručky zvedej do stran do úrovně ramen. Vedeš pohyb loktem, ne zápěstím, lokty jemně pokrčené. Dolů kontrolovaně, žádné houpání trupem.'},
+        {n:'Cable Tricep Pushdown', sets:'3×10–12', restT:'2 min', compound:false,
+         desc:'Lokty pevně u těla po celou dobu cviku. Tlač lanko/tyč do plného propnutí, nahoře pomalu pusť zpět. Nehýbej rameny ani trupem.'},
+        {n:'Overhead Dumbbell Tricep Extension', sets:'2–3×10–12', restT:'2 min', compound:false,
+         desc:'Jednoručka za hlavou, lokty směřují nahoru a zůstávají u hlavy. Spouštěj za hlavu kontrolovaně, propínej bez švihu zápěstím.'},
+      ]
+    },
+    {
+      id:'d2', num:2, tag:'Pull', rest:false,
+      summary:'6 cviků · 3 Back · 1 Rear Delts · 2 Biceps',
+      exercises:[
+        {n:'Deadlift', sets:'1×4–5 (top set) + 3×5 back-off, 1–2 RIR', restT:'3 min', compound:true,
+         desc:'Činka těsně u holení, záda rovná po celou dobu. Zvedej tlakem přes paty a natažením kyčlí, ne trhem zády. Rozjeď se rozehřívacími sériemi na nejtěžší set dne (top set), pak váhu sniž a udělej zbylé série ve stejném rozsahu opakování na 1–2 RIR. Nechoď na úplnou hranici – u mrtvého tahu se únava nejrychleji ze všech cviků přelévá do techniky.'},
+        {n:'Wide-Grip Pull-Up', sets:'4×3–5 (AMRAP)', restT:'2 min', compound:false,
+         desc:'Úchop výrazně širší než ramena, táhni se lopatkami dolů a dozadu, brada přes tyč. I pár kvalitních opakování stačí – hlavní je kontrola bez houpání.'},
+        {n:'Bent-Over Row', sets:'4×5–8', restT:'2 min', compound:false,
+         desc:'Předklon v kyčlích, záda rovná, táhni k pupku s lokty těsně u těla. Netrhej trupem, dole paže úplně natažené, nahoře stiskni lopatky.'},
+        {n:'Face Pull', sets:'3×12–15', restT:'2 min', compound:false,
+         desc:'Lanko na kladce ve výšce obličeje, úchop na tyč s lanky. Táhni k obličeji s lokty vysoko, na konci pohybu přidej zevní rotaci v ramenou. Lokty vedou pohyb, ramena zůstávají dole, netahej je k uším. Cílí zadní delty i zevní rotátory ramene zároveň.'},
+        {n:'Cable Bar Bicep Curl', sets:'3×8–12', restT:'2 min', compound:false,
+         desc:'Tyč na spodní kladce, lokty pevně u těla po celou dobu. Táhni k sobě bez švihu zády, nahoře krátce stiskni biceps, dolů kontrolovaně až do skoro natažené paže.'},
+        {n:'Dumbbell Bicep Curl', sets:'4×10–12', restT:'2 min', compound:false,
+         desc:'Lokty u boků, zvedej s rotací dlaní nahoru, nahoře stiskni biceps. Dolů pomalu a kontrolovaně, netrhej rameny.'},
+      ]
+    },
+    {
+      id:'d3', num:3, tag:'Legs', rest:false,
+      summary:'6 cviků · 2 Compound · 2 Isolation · 1 Calf · 1 Bulgarian Split Squat',
+      exercises:[
+        {n:'Back Squat', sets:'4×5 (5th set optional)', restT:'3 min', compound:true,
+         desc:'Osa na horní části zad, chodidla na šířku ramen, kolena ve směru špiček. Dřepni v kyčlích i kolenou zároveň, boky pod úroveň kolen. 2 rozehřívací série, pak pracovní váha na 5 opakování. Pátou sérii dělej jen když jsi dobře zregenerovaný, jinak zůstaň u čtyř.'},
+        {n:'Leg Press', sets:'3×8–10', restT:'3 min', compound:true,
+         desc:'Chodidla na šířku ramen na plošině, spouštěj do cca 90° v kolenou, záda i hýždě po celou dobu na opěrce. Tlač přes celé chodidlo, ne přes špičky.'},
+        {n:'Bulgarian Split Squat', sets:'3×8–10 per leg', restT:'2 min', compound:false,
+         desc:'Zátěž (kettlebell nebo činka) drž na zádech nebo podél těla, zadní noha opřená za tebou (o lavičku nebo jen ve výpadu). Přední koleno směřuje nad kotník, trup vzpřímený, dolů rovně bez padání dopředu. Klidně to dělej jako chůzi po posilovně a střídej nohy za pohybu – jde hlavně o kontrolu, ne o max váhu.'},
+        {n:'Leg Extension', sets:'3×12–15', restT:'2 min', compound:false,
+         desc:'Nahoře na chvíli podrž propnutou nohu, zkus lehce pootočit špičky do obou stran. Dolů kontrolovaně, váhu nenech padat.'},
+        {n:'Hamstring Curl', sets:'4×10–15', restT:'2 min', compound:false,
+         desc:'Boky přitisknuté k podložce, přitahuj patu k hýždím čistě silou hamstringu. Nahoře krátká pauza, dolů pomalu bez švihu pánví.'},
+        {n:'Standing Calf Raise', sets:'3–4×15–20', restT:'2 min', compound:false,
+         desc:'Špičky na vyvýšené podložce, zvedej se co nejvýš, nahoře na chvíli podrž. Dolů do plného protažení paty pod úroveň špiček.'},
+      ]
+    },
+    {
+      id:'d4', num:4, tag:'Rest', rest:true, summary:'Regenerace', exercises:[]
+    },
+    {
+      id:'d5', num:5, tag:'Upper', rest:false,
+      summary:'6 cviků · 2 Chest · 2 Back · 2 Shoulders',
+      exercises:[
+        {n:'Standing Overhead Press', sets:'3×6–8', restT:'3 min', compound:true,
+         desc:'Stoj na šířku boků, podsazená pánev, břicho i hýždě zpevněné. Tlač od klíčních kostí kolmo nad temeno hlavy. Pokud se prohýbáš v zádech, sniž váhu.'},
+        {n:'Dumbbell Bench Press', sets:'3–4×8–10', restT:'2 min', compound:false,
+         desc:'Jednoručky nad horní částí hrudníku, lokty cca 45° od těla. Spouštěj do protažení hrudníku, tlač nahoru bez přehnaného srážení jednoruček nahoře k sobě.'},
+        {n:'Cable Fly', sets:'3×12–15', restT:'2 min', compound:false,
+         desc:'Kladky v úrovni ramen nebo mírně nad, mírný předklon. Veď lanka obloukem před tělo, lokty mírně pokrčené po celou dobu – cítíš to v hrudníku, ne v ramenou.'},
+        {n:'Lat Pulldown', sets:'3–4×8–10', restT:'2 min', compound:false,
+         desc:'Úchop mírně širší než ramena, táhni tyč k horní části hrudníku, lopatky dolů a dozadu. Trup skoro kolmo, jen mírný záklon, nahoře pomalu pusť do plného protažení.'},
+        {n:'Seated Cable Row', sets:'3×8–10', restT:'2 min', compound:false,
+         desc:'Záda rovná po celou dobu, táhni rukojeť k pupku, lokty těsně u těla. Na konci stiskni lopatky k sobě, netrhej trupem dozadu.'},
+        {n:'Dumbbell Lateral Raise', sets:'3×12–15', restT:'2 min', compound:false,
+         desc:'Pohyb veď loktem do stran po úroveň ramen, lokty jemně pokrčené, kontrolovaný sestup bez houpání trupem.'},
+      ]
+    },
+    {
+      id:'d6', num:6, tag:'Legs & Arms', rest:false,
+      summary:'6 cviků · 1 Leg Compound · 2 Leg Isolation · 1 Biceps · 2 Triceps',
+      exercises:[
+        {n:'Romanian Deadlift', sets:'3×6–8', restT:'3 min', compound:true,
+         desc:'Osu nebo jednoručky drž před stehny, kolena jen mírně pokrčená. Nakláněj se v kyčlích dozadu, záda rovná po celou dobu, činka klouže těsně podél nohou dolů až do citelného protažení hamstringů. Zpět nahoru tlakem přes paty a natažením kyčlí, ne záklonem trupu.'},
+        {n:'Leg Extension', sets:'3×12–15', restT:'2 min', compound:false,
+         desc:'Nahoře na chvíli podrž propnutou nohu, zkus lehce pootočit špičky do obou stran. Dolů kontrolovaně, váhu nenech padat.'},
+        {n:'Hamstring Curl', sets:'4×10–15', restT:'2 min', compound:false,
+         desc:'Boky přitisknuté k podložce, přitahuj patu k hýždím čistě silou hamstringu. Nahoře krátká pauza, dolů pomalu bez švihu pánví.'},
+        {n:'Hammer Curl', sets:'4×10–12', restT:'2 min', compound:false,
+         desc:'Jednoručky "na kladivo" (dlaně k sobě), lokty u boků. Zvedej bez rotace zápěstí – zacílíš i předloktí, ne jen biceps.'},
+        {n:'Cable Tricep Pushdown', sets:'3×10–12', restT:'2 min', compound:false,
+         desc:'Lokty pevně u těla po celou dobu cviku. Tlač lanko/tyč do plného propnutí, nahoře pomalu pusť zpět. Nehýbej rameny ani trupem.'},
+        {n:'Skull Crusher (EZ-bar)', sets:'2–3×10–12', restT:'2 min', compound:false,
+         desc:'Leh na lavičku, EZ tyč nad čelem. Spouštěj ohybem v lokti k čelu, lokty zůstávají na místě a míří ke stropu. Propínej bez švihu ramen.'},
+      ]
+    },
+    {
+      id:'d7', num:7, tag:'Rest', rest:true, summary:'Regenerace', exercises:[]
+    },
+  ];
+
+  const ALL_EXNAMES = [];
+  DAYS.forEach(d=> d.exercises.forEach(ex=>{ if(ALL_EXNAMES.indexOf(ex.n)===-1) ALL_EXNAMES.push(ex.n); }));
+
+  // past-proof / future-proof: dropdown must include exercises that used to be
+  // in the plan (still have logged history) even after they're removed/replaced,
+  // and must keep working once new exercises replace old ones later.
+  function getChartExerciseGroups(){
+    const current = ALL_EXNAMES.slice();
+    const archived = Object.keys(data.history).filter(n => current.indexOf(n)===-1);
+    return { current, archived };
+  }
+
+  const STORAGE_KEY = 'ppl-plan-state-v2';
+  let data = { checks:{}, history:{}, chartSelected:'' };
+  let active = 'd1';
+  let showGlossary = false;
+
+  const GLOSSARY = [
+    {term:'RIR (Reps in Reserve / opakování v rezervě)',
+     def:'Kolik opakování bys ještě zvládl udělat navíc, kdybys musel, ale neděláš je. "1–2 RIR" znamená přestat sérii 1 až 2 opakování před tím, než bys už nedal ani jedno další.',
+     ex:'Např. "4×5 @ 1–2 RIR" – uděláš 4 série po 5 opakováních, a v každé skončíš tak, že bys teoreticky zvládl ještě 1–2 opakování navíc.'},
+    {term:'Top set',
+     def:'Nejtěžší série cviku v tréninku, dělaná jako první po rozehřátí. Cíl je co nejtěžší váha při zachování daného počtu opakování a RIR.',
+     ex:'"1×4–5 top set" – po rozehřátí uděláš jednu sérii na nejtěžší váhu dne, např. 110 kg × 5.'},
+    {term:'Back-off série',
+     def:'Série po top setu na nižší váze (typicky o 10–15 % lehčí), které se dají opakovat víckrát bez velkého poklesu formy.',
+     ex:'Po top setu 110 kg × 5 uděláš 3× 95 kg × 5 jako back-off série.'},
+    {term:'Silový cvik',
+     def:'Těžký, technicky náročný cvik (obvykle volná činka), kde jde primárně o sílu. V plánu má vždy 3 min pauzu mezi sériemi a zvýrazněný levý okraj kartičky.',
+     ex:'Bench Press, Deadlift, Back Squat, Overhead Press, Romanian Deadlift.'},
+    {term:'Konvenční cvik',
+     def:'Přístrojový/jednoruční/izolační cvik s vyšším počtem opakování, kde stačí 2 min pauza – neplatíš tolik únavou za sérii jako u silových cviků.',
+     ex:'Leg Extension, Lateral Raise, Cable Pushdown.'},
+    {term:'Compound',
+     def:'Vícekloubový cvik, který zapojuje víc svalových skupin a kloubů najednou.',
+     ex:'Squat zapojuje kyčle, kolena i core zároveň.'},
+    {term:'Isolation (izolace)',
+     def:'Jednokloubový cvik, který cílí prakticky jen jeden sval.',
+     ex:'Leg Extension cílí prakticky jen quadriceps, v kolenu se hýbe jen jeden kloub.'},
+    {term:'AMRAP (As Many Reps As Possible)',
+     def:'Udělej tolik čistých opakování, kolik zvládneš s dobrou formou – nesnaž se násilně natáhnout počet, jakmile forma začne padat.',
+     ex:'"4×3–5 AMRAP" u Pull-Up – když ti forma vydrží jen na 3 opakování, uděláš 3, ne že se hrabeš na 5.'},
+  ];
+
+  const root = document.getElementById('ppl-root');
+  const modalRoot = document.createElement('div');
+  document.body.appendChild(modalRoot);
+
+  function closeBackupModal(){ modalRoot.innerHTML = ''; }
+
+  function copyText(text, statusEl){
+    function ok(){ statusEl.textContent = 'Zkopírováno do schránky.'; }
+    function fail(){
+      const ta = document.getElementById('backup-ta');
+      if(ta){ ta.focus(); ta.select(); }
+      try{
+        if(document.execCommand('copy')) ok();
+        else statusEl.textContent = 'Nešlo zkopírovat automaticky, vyber text ručně (podržet prst → Vybrat vše).';
+      }catch(e){
+        statusEl.textContent = 'Nešlo zkopírovat automaticky, vyber text ručně (podržet prst → Vybrat vše).';
+      }
+    }
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(ok).catch(fail);
+    }else{
+      fail();
+    }
+  }
+
+  function showExportModal(){
+    const json = JSON.stringify(data);
+    modalRoot.innerHTML =
+      '<div class="backup-overlay" id="backup-overlay">'
+      + '<div class="backup-modal">'
+      + '<h3>Export zálohy</h3>'
+      + '<p>Klikni na Kopírovat a vlož text někam mimo artefakt (Poznámky, e-mail sám sobě...). Kdyby se ti data někdy ztratila, přes Import je vrátíš zpět.</p>'
+      + '<textarea class="backup-textarea" id="backup-ta" readonly></textarea>'
+      + '<div class="backup-status" id="backup-status"></div>'
+      + '<div class="backup-btns">'
+      + '<button class="backup-btn" id="backup-copy">Kopírovat</button>'
+      + '<button class="backup-btn ghost" id="backup-close">Zavřít</button>'
+      + '</div>'
+      + '</div></div>';
+    const ta = document.getElementById('backup-ta');
+    ta.value = json;
+    ta.focus();
+    ta.select();
+    document.getElementById('backup-copy').addEventListener('click', ()=>{
+      copyText(json, document.getElementById('backup-status'));
+    });
+    document.getElementById('backup-close').addEventListener('click', closeBackupModal);
+    document.getElementById('backup-overlay').addEventListener('click', (e)=>{
+      if(e.target.id==='backup-overlay') closeBackupModal();
+    });
+  }
+
+  function showImportModal(){
+    modalRoot.innerHTML =
+      '<div class="backup-overlay" id="backup-overlay">'
+      + '<div class="backup-modal">'
+      + '<h3>Import zálohy</h3>'
+      + '<p>Vlož sem (podržet prst → Vložit) dřív zkopírovaný text zálohy a klikni na Obnovit.</p>'
+      + '<textarea class="backup-textarea" id="backup-ta" placeholder="Vlož text zálohy sem..."></textarea>'
+      + '<div class="backup-status" id="backup-status"></div>'
+      + '<div class="backup-btns">'
+      + '<button class="backup-btn" id="backup-restore">Obnovit</button>'
+      + '<button class="backup-btn ghost" id="backup-close">Zrušit</button>'
+      + '</div>'
+      + '</div></div>';
+    document.getElementById('backup-restore').addEventListener('click', ()=>{
+      const raw = document.getElementById('backup-ta').value;
+      const statusEl = document.getElementById('backup-status');
+      try{
+        const parsed = JSON.parse(raw);
+        data.checks = parsed.checks || {};
+        data.history = parsed.history || {};
+        data.chartSelected = parsed.chartSelected || ALL_EXNAMES[0];
+        saveState();
+        closeBackupModal();
+        render();
+      }catch(e){
+        statusEl.textContent = 'Text nejde přečíst jako platnou zálohu.';
+      }
+    });
+    document.getElementById('backup-close').addEventListener('click', closeBackupModal);
+    document.getElementById('backup-overlay').addEventListener('click', (e)=>{
+      if(e.target.id==='backup-overlay') closeBackupModal();
+    });
+  }
+
+  function exId(dayId, idx){ return dayId + '-e' + idx; }
+
+  function loadState(){
+    try{
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if(raw){
+        const parsed = JSON.parse(raw);
+        data.checks = parsed.checks || {};
+        data.history = parsed.history || {};
+        data.chartSelected = parsed.chartSelected || '';
+      }
+    }catch(e){ /* start empty */ }
+    if(!data.chartSelected) data.chartSelected = ALL_EXNAMES[0];
+    render();
+  }
+
+  function saveState(){
+    try{
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    }catch(e){ /* best effort, e.g. storage full or blocked */ }
+  }
+
+  function toggleCheck(id){
+    data.checks[id] = !data.checks[id];
+    render();
+    saveState();
+  }
+
+  function resetWeek(){
+    data.checks = {};
+    render();
+    saveState();
+  }
+
+  function todayISO(){
+    return new Date().toISOString().slice(0,10);
+  }
+
+  function fmtShort(iso){
+    const d = new Date(iso+'T00:00:00');
+    return d.getDate()+'.'+(d.getMonth()+1)+'.';
+  }
+
+  function fmtLong(iso){
+    const d = new Date(iso+'T00:00:00');
+    return d.getDate()+'.'+(d.getMonth()+1)+'.'+d.getFullYear();
+  }
+
+  function upsertWeight(name, kg){
+    if(!data.history[name]) data.history[name] = [];
+    const list = data.history[name];
+    const today = todayISO();
+    const existing = list.find(e=>e.date===today);
+    if(existing){ existing.kg = kg; }
+    else{ list.push({date:today, kg:kg}); }
+    render();
+    saveState();
+  }
+
+  function deleteWeight(name, date){
+    if(!data.history[name]) return;
+    data.history[name] = data.history[name].filter(e=>e.date!==date);
+    render();
+    saveState();
+  }
+
+  function editWeight(name, date, kg){
+    if(!data.history[name]) return;
+    const e = data.history[name].find(e=>e.date===date);
+    if(e) e.kg = kg;
+    render();
+    saveState();
+  }
+
+  function dayProgress(day){
+    if(day.exercises.length === 0) return null;
+    let done = 0;
+    day.exercises.forEach((ex,i)=>{ if(data.checks[exId(day.id,i)]) done++; });
+    return done + '/' + day.exercises.length;
+  }
+
+  function lastWeightText(name){
+    const list = (data.history[name]||[]).slice().sort((a,b)=>a.date.localeCompare(b.date));
+    if(list.length===0) return 'Zatím žádný záznam';
+    const last = list[list.length-1];
+    return 'Naposledy: ' + last.kg + ' kg (' + fmtLong(last.date) + ')';
+  }
+
+  function weightLogHtml(name){
+    const list = (data.history[name]||[]).slice().sort((a,b)=>a.date.localeCompare(b.date));
+    const prefill = list.length ? list[list.length-1].kg : '';
+    return '<div class="weight-log">'
+      + '<input type="text" inputmode="decimal" class="wl-input" placeholder="kg" value="' + prefill + '" data-ex="' + name + '">'
+      + '<button class="wl-save" data-ex="' + name + '">Uložit</button>'
+      + '<span class="wl-last">' + lastWeightText(name) + '</span>'
+      + '</div>';
+  }
+
+  function buildChart(name){
+    const entries = (data.history[name]||[]).slice().sort((a,b)=>a.date.localeCompare(b.date));
+    if(entries.length===0) return { html:'<div class="chart-empty">Zatím žádné záznamy pro tento cvik.</div>', hasData:false, entries:entries };
+
+    const kgs = entries.map(e=>e.kg);
+    const minKg = Math.min.apply(null, kgs);
+    const maxKg = Math.max.apply(null, kgs);
+    const pad = (maxKg - minKg) || 5;
+    const yMin = minKg - pad*0.25;
+    const yMax = maxKg + pad*0.25;
+    const W=300,H=120,padL=26,padR=10,padT=10,padB=18;
+    const innerW=W-padL-padR, innerH=H-padT-padB;
+    const stepX = entries.length>1 ? innerW/(entries.length-1) : 0;
+    function xAt(i){ return padL + stepX*i; }
+    function yAt(kg){ return padT + innerH - ((kg-yMin)/(yMax-yMin))*innerH; }
+    const points = entries.map((e,i)=> xAt(i)+','+yAt(e.kg)).join(' ');
+    const circles = entries.map((e,i)=> '<circle cx="'+xAt(i)+'" cy="'+yAt(e.kg)+'" r="3" fill="#e3b23c" />').join('');
+    const labelMax = '<text x="2" y="'+(padT+4)+'" font-size="8" fill="#9199a3">'+maxKg+'</text>';
+    const labelMin = '<text x="2" y="'+(padT+innerH)+'" font-size="8" fill="#9199a3">'+minKg+'</text>';
+    const xLabelFirst = '<text x="'+xAt(0)+'" y="'+(H-4)+'" font-size="8" fill="#9199a3" text-anchor="middle">'+fmtShort(entries[0].date)+'</text>';
+    const xLabelLast = entries.length>1 ? '<text x="'+xAt(entries.length-1)+'" y="'+(H-4)+'" font-size="8" fill="#9199a3" text-anchor="middle">'+fmtShort(entries[entries.length-1].date)+'</text>' : '';
+    const svg = '<svg viewBox="0 0 '+W+' '+H+'" class="chart-svg-inner">'
+      + (entries.length>1 ? '<polyline points="'+points+'" fill="none" stroke="#e3b23c" stroke-width="2"/>' : '')
+      + circles + labelMax + labelMin + xLabelFirst + xLabelLast
+      + '</svg>';
+
+    const rows = entries.slice().reverse().map(e=>
+      '<div class="entry-row" data-name="'+name+'" data-date="'+e.date+'">'
+      + '<span class="entry-date">'+fmtShort(e.date)+'</span>'
+      + '<span class="entry-kg" data-name="'+name+'" data-date="'+e.date+'" data-kg="'+e.kg+'">'+e.kg+' kg</span>'
+      + '</div>'
+    ).join('');
+
+    return { html:'<div class="chart-svg-wrap">'+svg+'</div><div class="entry-list">'+rows+'</div>', hasData:true, entries:entries };
+  }
+
+  function render(){
+    const day = DAYS.find(d=>d.id===active);
+
+    const strip = DAYS.map(d=>{
+      const prog = dayProgress(d);
+      return '<div class="day-pill '+(d.id===active?'active':'')+' '+(d.rest?'rest-pill':'')+'" data-day="'+d.id+'">'
+        + '<div class="dnum">Den '+d.num+'</div>'
+        + '<div class="dtag">'+d.tag+'</div>'
+        + (prog ? '<div class="dprog">'+prog+'</div>' : '')
+        + '</div>';
+    }).join('');
+
+    const exGroups = getChartExerciseGroups();
+    function opt(n){ return '<option value="'+n+'" '+(n===data.chartSelected?'selected':'')+'>'+n+'</option>'; }
+    const chartOptions =
+      '<optgroup label="Aktuální plán">' + exGroups.current.map(opt).join('') + '</optgroup>'
+      + (exGroups.archived.length ? '<optgroup label="Dřívější cviky">' + exGroups.archived.map(opt).join('') + '</optgroup>' : '');
+    const chartBody = buildChart(data.chartSelected);
+
+    let content;
+    if(day.rest){
+      content = '<div class="rest-day-card"><strong>Rest day</strong>Žádné cviky – dej tělu čas na regeneraci a růst. Klidně lehký pohyb nebo protažení, ale žádná zátěž.</div>';
+    }else{
+      const cards = day.exercises.map((ex,i)=>{
+        const id = exId(day.id,i);
+        const done = !!data.checks[id];
+        return '<div class="excard '+(ex.compound?'compound':'')+' '+(done?'done':'')+'">'
+          + '<div class="chk-wrap"><input type="checkbox" class="chk" data-id="'+id+'" '+(done?'checked':'')+'></div>'
+          + '<div class="body">'
+          + '<div class="exname-row">'
+          + '<div class="exname"><span class="exnum">'+(i+1)+'.</span>'+ex.n+'</div>'
+          + '<div class="setinfo">'+ex.sets+'</div>'
+          + '</div>'
+          + '<div class="restbadge">Pauza: '+ex.restT+(ex.compound ? ' · silový cvik' : ' · konvenční cvik')+'</div>'
+          + '<div class="desc">'+ex.desc+'</div>'
+          + weightLogHtml(ex.n)
+          + '</div>'
+          + '</div>';
+      }).join('');
+      content = '<div class="exlist">'+cards+'</div>';
+    }
+
+    root.innerHTML =
+      '<div class="head">'
+      + '<div><h1>Push / Pull / Legs</h1><p>Týdenní plán ze silových tipů + technicky rozdělené svalové skupiny.</p></div>'
+      + '<div class="head-btns">'
+      + '<button class="reset-btn" id="export-btn">Export</button>'
+      + '<button class="reset-btn" id="import-btn">Import</button>'
+      + '<button class="reset-btn" id="reset-btn">Reset týdne</button>'
+      + '</div>'
+      + '</div>'
+      + '<div class="day-strip">'+strip+'</div>'
+      + '<button class="glossary-toggle" id="glossary-toggle">Termíny a zkratky <span class="arrow">'+(showGlossary?'▲':'▼')+'</span></button>'
+      + (showGlossary ? '<div class="glossary-panel">' + GLOSSARY.map(g=>
+          '<div class="glossary-item">'
+          + '<div class="glossary-term">'+g.term+'</div>'
+          + '<div class="glossary-def">'+g.def+'</div>'
+          + '<div class="glossary-example">Příklad: '+g.ex+'</div>'
+          + '</div>'
+        ).join('') + '</div>' : '')
+      + '<div class="day-panel-head"><h2>Den '+day.num+': '+day.tag+'</h2><div class="summary">'+day.summary+'</div></div>'
+      + content
+      + '<div class="chart-section">'
+      + '<div class="chart-head"><h3>Graf postupné zátěže</h3><select class="chart-select" id="chart-select">'+chartOptions+'</select></div>'
+      + chartBody.html
+      + '</div>';
+
+
+    document.getElementById('glossary-toggle').addEventListener('click', ()=>{
+      showGlossary = !showGlossary;
+      render();
+    });
+    root.querySelectorAll('.day-pill').forEach(el=>{
+      el.addEventListener('click', ()=>{ active = el.dataset.day; render(); });
+    });
+    root.querySelectorAll('.chk').forEach(el=>{
+      el.addEventListener('change', ()=> toggleCheck(el.dataset.id));
+    });
+    document.getElementById('reset-btn').addEventListener('click', ()=>{
+      if(confirm('Smazat zaškrtnutí pro celý týden?')) resetWeek();
+    });
+    document.getElementById('export-btn').addEventListener('click', showExportModal);
+    document.getElementById('import-btn').addEventListener('click', showImportModal);
+
+    const sel = document.getElementById('chart-select');
+    if(sel){
+      sel.addEventListener('change', ()=>{
+        data.chartSelected = sel.value;
+        render();
+        saveState();
+      });
+    }
+    function sanitizeDecimalInput(el){
+      el.addEventListener('input', ()=>{
+        let v = el.value.replace(',', '.');
+        v = v.replace(/[^0-9.]/g, '');
+        const firstDot = v.indexOf('.');
+        if(firstDot !== -1){
+          v = v.slice(0, firstDot+1) + v.slice(firstDot+1).replace(/\./g, '');
+        }
+        el.value = v;
+      });
+    }
+
+    root.querySelectorAll('.wl-save').forEach(el=>{
+      el.addEventListener('click', ()=>{
+        const name = el.dataset.ex;
+        const input = root.querySelector('.wl-input[data-ex="'+CSS.escape(name)+'"]');
+        const val = input ? parseFloat(input.value) : NaN;
+        if(!isNaN(val)) upsertWeight(name, val);
+      });
+    });
+    root.querySelectorAll('.wl-input').forEach(el=>{
+      sanitizeDecimalInput(el);
+      el.addEventListener('keydown', (e)=>{
+        if(e.key==='Enter'){
+          const val = parseFloat(el.value);
+          if(!isNaN(val)) upsertWeight(el.dataset.ex, val);
+        }
+      });
+      el.addEventListener('wheel', (e)=>{ e.preventDefault(); }, {passive:false});
+    });
+    root.querySelectorAll('.entry-kg').forEach(el=>{
+      el.addEventListener('click', ()=>{
+        const name = el.dataset.name, date = el.dataset.date, kg = el.dataset.kg;
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.inputMode = 'decimal';
+        input.className = 'entry-kg-input';
+        input.value = kg;
+        el.replaceWith(input);
+        sanitizeDecimalInput(input);
+        input.focus();
+        input.select();
+        function commit(){
+          const val = parseFloat(input.value);
+          if(!isNaN(val)) editWeight(name, date, val);
+          else render();
+        }
+        input.addEventListener('blur', commit);
+        input.addEventListener('keydown', (e)=>{ if(e.key==='Enter') commit(); });
+        input.addEventListener('wheel', (e)=>{ e.preventDefault(); }, {passive:false});
+      });
+    });
+  }
+
+  loadState();
+})();
+</script>
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js').catch(() => {});
+    });
+  }
+</script>
+</body>
+</html>
