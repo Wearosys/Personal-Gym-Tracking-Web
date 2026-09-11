@@ -159,14 +159,12 @@
   }
 
   .day-strip{
-    display:flex;
-    gap:7px;
-    overflow-x:auto;
+    display:grid;
+    grid-template-columns:repeat(5, 1fr);
+    gap:6px;
     padding-bottom:6px;
     margin-bottom:10px;
-    scrollbar-width:none;
   }
-  .day-strip::-webkit-scrollbar{display:none;}
 
   .glossary-toggle{
     display:block;
@@ -220,14 +218,14 @@
     font-style:italic;
   }
   .day-pill{
-    flex:none;
-    min-width:64px;
+    min-width:0;
     background:var(--surface);
     border:1px solid var(--border);
-    border-radius:9px;
-    padding:8px 6px 7px;
+    border-radius:8px;
+    padding:7px 4px 6px;
     text-align:center;
     cursor:pointer;
+    overflow:hidden;
   }
   .day-pill.active{
     border-color:var(--accent);
@@ -235,18 +233,21 @@
   }
   .day-pill .dnum{
     font-family:'Oswald',sans-serif;
-    font-size:11px;
+    font-size:10px;
     color:var(--text-dim);
-    letter-spacing:.3px;
+    letter-spacing:.2px;
   }
   .day-pill.active .dnum{color:var(--accent);}
   .day-pill .dtag{
-    font-size:11.5px;
+    font-size:10.5px;
     font-weight:600;
     margin-top:2px;
+    line-height:1.2;
+    overflow:hidden;
+    text-overflow:ellipsis;
   }
   .day-pill .dprog{
-    font-size:10px;
+    font-size:9px;
     color:var(--text-dim);
     margin-top:3px;
   }
@@ -347,6 +348,32 @@
     color:var(--text-dim);
     margin-top:2px;
   }
+  .targetbadge{
+    font-size:10.5px;
+    color:var(--text-dim);
+    margin-top:1px;
+    opacity:.85;
+  }
+  .mandatory-line{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    margin:4px 2px;
+  }
+  .mandatory-line::before,
+  .mandatory-line::after{
+    content:"";
+    flex:1;
+    height:1px;
+    background:var(--border);
+  }
+  .mandatory-line span{
+    font-family:'Oswald',sans-serif;
+    font-size:11px;
+    letter-spacing:.6px;
+    color:var(--accent);
+    white-space:nowrap;
+  }
   .desc{
     font-size:12.5px;
     color:var(--text-dim);
@@ -371,6 +398,8 @@
     justify-content:center;
     z-index:1000;
     padding:16px;
+    font-family:'Inter',system-ui,sans-serif;
+    color:var(--text);
   }
   .backup-modal{
     background:var(--surface);
@@ -383,12 +412,14 @@
     display:flex;
     flex-direction:column;
     gap:8px;
+    color:var(--text);
   }
   .backup-modal h3{
     font-family:'Oswald',sans-serif;
     font-weight:600;
     font-size:16px;
     margin:0;
+    color:var(--text);
   }
   .backup-modal p{
     font-size:12.5px;
@@ -475,54 +506,75 @@
     {
       id:'d1', num:1, tag:'Push', rest:false,
       summary:'6 cviků · 2 Chest · 2 Shoulders · 2 Triceps',
+      mandatoryCount:4,
       exercises:[
         {n:'Barbell Bench Press', sets:'4×5 @ 1–2 RIR', restT:'3 min', compound:true,
+         target:'Compound · prsa, triceps, přední delty',
          desc:'Lopatky stažené k sobě a dolů, chodidla pevně na zemi. Úchop mírně širší než ramena, zápěstí rovná. Spouštěj k dolní části hrudníku, lokty cca 45° od těla. 2 rozehřívací série, pak pracovní váha na 5 opakování s 1–2 opakováními v rezervě (RIR) – skonči o 1–2 opakování dřív, než bys už nedal ani jedno navíc.'},
         {n:'Standing Overhead Press', sets:'3–4×6–8', restT:'3 min', compound:true,
+         target:'Compound · přední delty, triceps, core',
          desc:'Stoj na šířku boků, podsazená pánev, břicho i hýždě zpevněné. Tlač od klíčních kostí kolmo nad temeno hlavy. Pokud se prohýbáš v zádech, sniž váhu.'},
         {n:'Incline Dumbbell Press', sets:'3–4×8–10', restT:'2 min', compound:false,
+         target:'Compound · horní část prsou, přední delty',
          desc:'Lavice cca 30°, jednoručky nad horní částí hrudníku, lokty pod zápěstím. Tlač nahoru a mírně dovnitř, nahoře nezamykej lokty naplno, dole cítit protažení bez propadu ramen dopředu.'},
-        {n:'Dumbbell Lateral Raise', sets:'3×12–15', restT:'2 min', compound:false,
-         desc:'Mírný předklon trupu, jednoručky zvedej do stran do úrovně ramen. Vedeš pohyb loktem, ne zápěstím, lokty jemně pokrčené. Dolů kontrolovaně, žádné houpání trupem.'},
         {n:'Cable Tricep Pushdown', sets:'3×10–12', restT:'2 min', compound:false,
+         target:'Izolace · triceps',
          desc:'Lokty pevně u těla po celou dobu cviku. Tlač lanko/tyč do plného propnutí, nahoře pomalu pusť zpět. Nehýbej rameny ani trupem.'},
+        {n:'Dumbbell Lateral Raise', sets:'3×12–15', restT:'2 min', compound:false,
+         target:'Izolace · boční delty',
+         desc:'Mírný předklon trupu, jednoručky zvedej do stran do úrovně ramen. Vedeš pohyb loktem, ne zápěstím, lokty jemně pokrčené. Dolů kontrolovaně, žádné houpání trupem.'},
         {n:'Overhead Dumbbell Tricep Extension', sets:'2–3×10–12', restT:'2 min', compound:false,
+         target:'Izolace · triceps (dlouhá hlava)',
          desc:'Jednoručka za hlavou, lokty směřují nahoru a zůstávají u hlavy. Spouštěj za hlavu kontrolovaně, propínej bez švihu zápěstím.'},
       ]
     },
     {
       id:'d2', num:2, tag:'Pull', rest:false,
       summary:'6 cviků · 3 Back · 1 Rear Delts · 2 Biceps',
+      mandatoryCount:4,
       exercises:[
         {n:'Deadlift', sets:'1×4–5 (top set) + 3×5 back-off, 1–2 RIR', restT:'3 min', compound:true,
+         target:'Compound · spodní záda, hamstringy, hýždě, trapézy',
          desc:'Činka těsně u holení, záda rovná po celou dobu. Zvedej tlakem přes paty a natažením kyčlí, ne trhem zády. Rozjeď se rozehřívacími sériemi na nejtěžší set dne (top set), pak váhu sniž a udělej zbylé série ve stejném rozsahu opakování na 1–2 RIR. Nechoď na úplnou hranici – u mrtvého tahu se únava nejrychleji ze všech cviků přelévá do techniky.'},
         {n:'Wide-Grip Pull-Up', sets:'4×3–5 (AMRAP)', restT:'2 min', compound:false,
+         target:'Compound · široký sval zádový (lats), biceps',
          desc:'Úchop výrazně širší než ramena, táhni se lopatkami dolů a dozadu, brada přes tyč. I pár kvalitních opakování stačí – hlavní je kontrola bez houpání.'},
         {n:'Bent-Over Row', sets:'4×5–8', restT:'2 min', compound:false,
+         target:'Compound · střed zad, lopatky, zadní delty',
          desc:'Předklon v kyčlích, záda rovná, táhni k pupku s lokty těsně u těla. Netrhej trupem, dole paže úplně natažené, nahoře stiskni lopatky.'},
         {n:'Face Pull', sets:'3×12–15', restT:'2 min', compound:false,
+         target:'Izolace · zadní delty, zevní rotátory ramene',
          desc:'Lanko na kladce ve výšce obličeje, úchop na tyč s lanky. Táhni k obličeji s lokty vysoko, na konci pohybu přidej zevní rotaci v ramenou. Lokty vedou pohyb, ramena zůstávají dole, netahej je k uším. Cílí zadní delty i zevní rotátory ramene zároveň.'},
         {n:'Cable Bar Bicep Curl', sets:'3×8–12', restT:'2 min', compound:false,
+         target:'Izolace · biceps',
          desc:'Tyč na spodní kladce, lokty pevně u těla po celou dobu. Táhni k sobě bez švihu zády, nahoře krátce stiskni biceps, dolů kontrolovaně až do skoro natažené paže.'},
         {n:'Dumbbell Bicep Curl', sets:'4×10–12', restT:'2 min', compound:false,
+         target:'Izolace · biceps',
          desc:'Lokty u boků, zvedej s rotací dlaní nahoru, nahoře stiskni biceps. Dolů pomalu a kontrolovaně, netrhej rameny.'},
       ]
     },
     {
       id:'d3', num:3, tag:'Legs', rest:false,
       summary:'6 cviků · 2 Compound · 2 Isolation · 1 Calf · 1 Bulgarian Split Squat',
+      mandatoryCount:4,
       exercises:[
         {n:'Back Squat', sets:'4×5 (5th set optional)', restT:'3 min', compound:true,
+         target:'Compound · quadricepsy, hýždě, core',
          desc:'Osa na horní části zad, chodidla na šířku ramen, kolena ve směru špiček. Dřepni v kyčlích i kolenou zároveň, boky pod úroveň kolen. 2 rozehřívací série, pak pracovní váha na 5 opakování. Pátou sérii dělej jen když jsi dobře zregenerovaný, jinak zůstaň u čtyř.'},
         {n:'Leg Press', sets:'3×8–10', restT:'3 min', compound:true,
+         target:'Compound · quadricepsy, hýždě',
          desc:'Chodidla na šířku ramen na plošině, spouštěj do cca 90° v kolenou, záda i hýždě po celou dobu na opěrce. Tlač přes celé chodidlo, ne přes špičky.'},
         {n:'Bulgarian Split Squat', sets:'3×8–10 per leg', restT:'2 min', compound:false,
+         target:'Compound (unilaterální) · quadricepsy, hýždě, stabilita',
          desc:'Zátěž (kettlebell nebo činka) drž na zádech nebo podél těla, zadní noha opřená za tebou (o lavičku nebo jen ve výpadu). Přední koleno směřuje nad kotník, trup vzpřímený, dolů rovně bez padání dopředu. Klidně to dělej jako chůzi po posilovně a střídej nohy za pohybu – jde hlavně o kontrolu, ne o max váhu.'},
-        {n:'Leg Extension', sets:'3×12–15', restT:'2 min', compound:false,
-         desc:'Nahoře na chvíli podrž propnutou nohu, zkus lehce pootočit špičky do obou stran. Dolů kontrolovaně, váhu nenech padat.'},
         {n:'Hamstring Curl', sets:'4×10–15', restT:'2 min', compound:false,
+         target:'Izolace · hamstringy (zadní strana stehen)',
          desc:'Boky přitisknuté k podložce, přitahuj patu k hýždím čistě silou hamstringu. Nahoře krátká pauza, dolů pomalu bez švihu pánví.'},
+        {n:'Leg Extension', sets:'3×12–15', restT:'2 min', compound:false,
+         target:'Izolace · quadricepsy',
+         desc:'Nahoře na chvíli podrž propnutou nohu, zkus lehce pootočit špičky do obou stran. Dolů kontrolovaně, váhu nenech padat.'},
         {n:'Standing Calf Raise', sets:'3–4×15–20', restT:'2 min', compound:false,
+         target:'Izolace · lýtka (gastrocnemius)',
          desc:'Špičky na vyvýšené podložce, zvedej se co nejvýš, nahoře na chvíli podrž. Dolů do plného protažení paty pod úroveň špiček.'},
       ]
     },
@@ -532,36 +584,50 @@
     {
       id:'d5', num:5, tag:'Upper', rest:false,
       summary:'6 cviků · 2 Chest · 2 Back · 2 Shoulders',
+      mandatoryCount:4,
       exercises:[
         {n:'Standing Overhead Press', sets:'3×6–8', restT:'3 min', compound:true,
+         target:'Compound · přední delty, triceps, core',
          desc:'Stoj na šířku boků, podsazená pánev, břicho i hýždě zpevněné. Tlač od klíčních kostí kolmo nad temeno hlavy. Pokud se prohýbáš v zádech, sniž váhu.'},
         {n:'Dumbbell Bench Press', sets:'3–4×8–10', restT:'2 min', compound:false,
+         target:'Compound · prsa, triceps, přední delty',
          desc:'Jednoručky nad horní částí hrudníku, lokty cca 45° od těla. Spouštěj do protažení hrudníku, tlač nahoru bez přehnaného srážení jednoruček nahoře k sobě.'},
-        {n:'Cable Fly', sets:'3×12–15', restT:'2 min', compound:false,
-         desc:'Kladky v úrovni ramen nebo mírně nad, mírný předklon. Veď lanka obloukem před tělo, lokty mírně pokrčené po celou dobu – cítíš to v hrudníku, ne v ramenou.'},
         {n:'Lat Pulldown', sets:'3–4×8–10', restT:'2 min', compound:false,
+         target:'Compound · široký sval zádový (lats), biceps',
          desc:'Úchop mírně širší než ramena, táhni tyč k horní části hrudníku, lopatky dolů a dozadu. Trup skoro kolmo, jen mírný záklon, nahoře pomalu pusť do plného protažení.'},
         {n:'Seated Cable Row', sets:'3×8–10', restT:'2 min', compound:false,
+         target:'Compound · střed zad, lopatky, biceps',
          desc:'Záda rovná po celou dobu, táhni rukojeť k pupku, lokty těsně u těla. Na konci stiskni lopatky k sobě, netrhej trupem dozadu.'},
+        {n:'Cable Fly', sets:'3×12–15', restT:'2 min', compound:false,
+         target:'Izolace · prsa',
+         desc:'Kladky v úrovni ramen nebo mírně nad, mírný předklon. Veď lanka obloukem před tělo, lokty mírně pokrčené po celou dobu – cítíš to v hrudníku, ne v ramenou.'},
         {n:'Dumbbell Lateral Raise', sets:'3×12–15', restT:'2 min', compound:false,
+         target:'Izolace · boční delty',
          desc:'Pohyb veď loktem do stran po úroveň ramen, lokty jemně pokrčené, kontrolovaný sestup bez houpání trupem.'},
       ]
     },
     {
       id:'d6', num:6, tag:'Legs & Arms', rest:false,
       summary:'6 cviků · 1 Leg Compound · 2 Leg Isolation · 1 Biceps · 2 Triceps',
+      mandatoryCount:4,
       exercises:[
         {n:'Romanian Deadlift', sets:'3×6–8', restT:'3 min', compound:true,
+         target:'Compound · hamstringy, hýždě, spodní záda',
          desc:'Osu nebo jednoručky drž před stehny, kolena jen mírně pokrčená. Nakláněj se v kyčlích dozadu, záda rovná po celou dobu, činka klouže těsně podél nohou dolů až do citelného protažení hamstringů. Zpět nahoru tlakem přes paty a natažením kyčlí, ne záklonem trupu.'},
-        {n:'Leg Extension', sets:'3×12–15', restT:'2 min', compound:false,
-         desc:'Nahoře na chvíli podrž propnutou nohu, zkus lehce pootočit špičky do obou stran. Dolů kontrolovaně, váhu nenech padat.'},
         {n:'Hamstring Curl', sets:'4×10–15', restT:'2 min', compound:false,
+         target:'Izolace · hamstringy (zadní strana stehen)',
          desc:'Boky přitisknuté k podložce, přitahuj patu k hýždím čistě silou hamstringu. Nahoře krátká pauza, dolů pomalu bez švihu pánví.'},
         {n:'Hammer Curl', sets:'4×10–12', restT:'2 min', compound:false,
+         target:'Izolace · biceps, předloktí',
          desc:'Jednoručky "na kladivo" (dlaně k sobě), lokty u boků. Zvedej bez rotace zápěstí – zacílíš i předloktí, ne jen biceps.'},
         {n:'Cable Tricep Pushdown', sets:'3×10–12', restT:'2 min', compound:false,
+         target:'Izolace · triceps',
          desc:'Lokty pevně u těla po celou dobu cviku. Tlač lanko/tyč do plného propnutí, nahoře pomalu pusť zpět. Nehýbej rameny ani trupem.'},
+        {n:'Leg Extension', sets:'3×12–15', restT:'2 min', compound:false,
+         target:'Izolace · quadricepsy',
+         desc:'Nahoře na chvíli podrž propnutou nohu, zkus lehce pootočit špičky do obou stran. Dolů kontrolovaně, váhu nenech padat.'},
         {n:'Skull Crusher (EZ-bar)', sets:'2–3×10–12', restT:'2 min', compound:false,
+         target:'Izolace · triceps (dlouhá hlava)',
          desc:'Leh na lavičku, EZ tyč nad čelem. Spouštěj ohybem v lokti k čelu, lokty zůstávají na místě a míří ke stropu. Propínej bez švihu ramen.'},
       ]
     },
@@ -637,6 +703,27 @@
     }else{
       fail();
     }
+  }
+
+  function showResetModal(){
+    modalRoot.innerHTML =
+      '<div class="backup-overlay" id="backup-overlay">'
+      + '<div class="backup-modal">'
+      + '<h3>Reset týdne</h3>'
+      + '<p>Opravdu smazat zaškrtnutí u všech cviků v celém týdnu? Uložené váhy a graf zůstanou zachované.</p>'
+      + '<div class="backup-btns">'
+      + '<button class="backup-btn" id="reset-yes">Ano, smazat</button>'
+      + '<button class="backup-btn ghost" id="backup-close">Ne</button>'
+      + '</div>'
+      + '</div></div>';
+    document.getElementById('reset-yes').addEventListener('click', ()=>{
+      closeBackupModal();
+      resetWeek();
+    });
+    document.getElementById('backup-close').addEventListener('click', closeBackupModal);
+    document.getElementById('backup-overlay').addEventListener('click', (e)=>{
+      if(e.target.id==='backup-overlay') closeBackupModal();
+    });
   }
 
   function showExportModal(){
@@ -860,7 +947,7 @@
       const cards = day.exercises.map((ex,i)=>{
         const id = exId(day.id,i);
         const done = !!data.checks[id];
-        return '<div class="excard '+(ex.compound?'compound':'')+' '+(done?'done':'')+'">'
+        const card = '<div class="excard '+(ex.compound?'compound':'')+' '+(done?'done':'')+'">'
           + '<div class="chk-wrap"><input type="checkbox" class="chk" data-id="'+id+'" '+(done?'checked':'')+'></div>'
           + '<div class="body">'
           + '<div class="exname-row">'
@@ -868,10 +955,16 @@
           + '<div class="setinfo">'+ex.sets+'</div>'
           + '</div>'
           + '<div class="restbadge">Pauza: '+ex.restT+(ex.compound ? ' · silový cvik' : ' · konvenční cvik')+'</div>'
+          + (ex.target ? '<div class="targetbadge">'+ex.target+'</div>' : '')
           + '<div class="desc">'+ex.desc+'</div>'
           + weightLogHtml(ex.n)
           + '</div>'
           + '</div>';
+        const mc = day.mandatoryCount;
+        const divider = (mc && i === mc-1 && day.exercises.length > mc)
+          ? '<div class="mandatory-line"><span>KONEC MANDATORY</span></div>'
+          : '';
+        return card + divider;
       }).join('');
       content = '<div class="exlist">'+cards+'</div>';
     }
@@ -912,9 +1005,7 @@
     root.querySelectorAll('.chk').forEach(el=>{
       el.addEventListener('change', ()=> toggleCheck(el.dataset.id));
     });
-    document.getElementById('reset-btn').addEventListener('click', ()=>{
-      if(confirm('Smazat zaškrtnutí pro celý týden?')) resetWeek();
-    });
+    document.getElementById('reset-btn').addEventListener('click', showResetModal);
     document.getElementById('export-btn').addEventListener('click', showExportModal);
     document.getElementById('import-btn').addEventListener('click', showImportModal);
 
