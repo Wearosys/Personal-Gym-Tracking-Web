@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ppl-plan-v4';
+const CACHE_NAME = 'ppl-plan-v6';
 const ASSETS = [
   './',
   './index.html',

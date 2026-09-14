@@ -292,7 +292,37 @@
   .excard.compound{border-left-color:var(--accent);}
   .excard.done{opacity:.55;}
 
-  .excard .chk-wrap{flex:none;padding-top:2px;}
+  .excard .chk-wrap{flex:none;padding-top:2px;display:flex;flex-direction:column;align-items:center;gap:6px;}
+
+  .chk-light{
+    appearance:none;
+    -webkit-appearance:none;
+    width:20px;
+    height:20px;
+    border-radius:5px;
+    border:1.5px solid var(--border);
+    background:var(--surface-2);
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:0;
+  }
+  .chk-light::after{
+    content:"L";
+    font-family:'Oswald',sans-serif;
+    font-size:11px;
+    font-weight:700;
+    color:var(--text-dim);
+  }
+  .chk-light:checked{
+    background:#153a1f;
+    border-color:#4ade80;
+    box-shadow:0 0 7px 1px rgba(74,222,128,0.65);
+  }
+  .chk-light:checked::after{
+    color:#4ade80;
+  }
   .chk{
     appearance:none;
     -webkit-appearance:none;
@@ -643,13 +673,13 @@
   // in the plan (still have logged history) even after they're removed/replaced,
   // and must keep working once new exercises replace old ones later.
   function getChartExerciseGroups(){
-    const current = ALL_EXNAMES.slice();
-    const archived = Object.keys(data.history).filter(n => current.indexOf(n)===-1);
+    const current = ALL_EXNAMES.slice().sort((a,b)=>a.localeCompare(b));
+    const archived = Object.keys(data.history).filter(n => ALL_EXNAMES.indexOf(n)===-1).sort((a,b)=>a.localeCompare(b));
     return { current, archived };
   }
 
   const STORAGE_KEY = 'ppl-plan-state-v2';
-  let data = { checks:{}, history:{}, chartSelected:'' };
+  let data = { checks:{}, history:{}, chartSelected:'', lightFlags:{} };
   let active = 'd1';
   let showGlossary = false;
 
@@ -774,6 +804,7 @@
         data.checks = parsed.checks || {};
         data.history = parsed.history || {};
         data.chartSelected = parsed.chartSelected || ALL_EXNAMES[0];
+        data.lightFlags = parsed.lightFlags || {};
         saveState();
         closeBackupModal();
         render();
@@ -797,6 +828,7 @@
         data.checks = parsed.checks || {};
         data.history = parsed.history || {};
         data.chartSelected = parsed.chartSelected || '';
+        data.lightFlags = parsed.lightFlags || {};
       }
     }catch(e){ /* start empty */ }
     if(!data.chartSelected) data.chartSelected = ALL_EXNAMES[0];
@@ -811,6 +843,12 @@
 
   function toggleCheck(id){
     data.checks[id] = !data.checks[id];
+    render();
+    saveState();
+  }
+
+  function toggleLightFlag(name){
+    data.lightFlags[name] = !data.lightFlags[name];
     render();
     saveState();
   }
@@ -948,7 +986,10 @@
         const id = exId(day.id,i);
         const done = !!data.checks[id];
         const card = '<div class="excard '+(ex.compound?'compound':'')+' '+(done?'done':'')+'">'
-          + '<div class="chk-wrap"><input type="checkbox" class="chk" data-id="'+id+'" '+(done?'checked':'')+'></div>'
+          + '<div class="chk-wrap">'
+          + '<input type="checkbox" class="chk" data-id="'+id+'" '+(done?'checked':'')+'>'
+          + '<input type="checkbox" class="chk-light" data-name="'+ex.n+'" '+(data.lightFlags[ex.n]?'checked':'')+' title="Váha byla lehká — příště přidat">'
+          + '</div>'
           + '<div class="body">'
           + '<div class="exname-row">'
           + '<div class="exname"><span class="exnum">'+(i+1)+'.</span>'+ex.n+'</div>'
@@ -1004,6 +1045,9 @@
     });
     root.querySelectorAll('.chk').forEach(el=>{
       el.addEventListener('change', ()=> toggleCheck(el.dataset.id));
+    });
+    root.querySelectorAll('.chk-light').forEach(el=>{
+      el.addEventListener('change', ()=> toggleLightFlag(el.dataset.name));
     });
     document.getElementById('reset-btn').addEventListener('click', showResetModal);
     document.getElementById('export-btn').addEventListener('click', showExportModal);
